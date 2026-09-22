@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.json">
+<title>Kampf der Krieger</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#fff;font-family:system-ui,-apple-system,sans-serif;touch-action:manipulation}
+.app{max-width:520px;margin:auto;min-height:100vh;background:linear-gradient(#18233b,#0d1425);padding-bottom:80px}
+header{padding:14px 16px 10px;position:sticky;top:0;background:#111a2cdd;backdrop-filter:blur(8px);z-index:5}
+h1{margin:0;font-size:23px}.stats{display:flex;gap:8px;margin-top:10px}.stat{flex:1;background:#202d47;border-radius:12px;padding:8px;font-size:13px;text-align:center}
+.tabs{display:flex;gap:6px;padding:10px 12px;background:#0f1728;position:sticky;top:92px;z-index:4}.tab{flex:1;border:0;border-radius:10px;padding:11px;background:#273550;color:#fff;font-weight:700}.tab.active{background:#e29a2d}
+main{padding:12px}.panel{display:none}.panel.active{display:block}
+.base{position:relative;background:#638f43;border:6px solid #3f5d32;border-radius:16px;overflow:hidden;aspect-ratio:10/14;max-height:70vh}
+.grid{position:absolute;inset:0;background-image:linear-gradient(#ffffff18 1px,transparent 1px),linear-gradient(90deg,#ffffff18 1px,transparent 1px);background-size:10% 7.142857%}
+.building{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;border:2px solid #fff8;border-radius:9px;font-size:25px;user-select:none;box-shadow:0 3px 8px #0006}
+.b2{width:20%;height:14.2857%}.b3{width:30%;height:21.4286%}
+.wall{position:absolute;background:#777;border:2px solid #bbb;border-radius:4px;box-shadow:0 2px 4px #0008}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.btn{border:0;border-radius:11px;padding:12px;background:#344563;color:#fff;font-weight:700}.btn.gold{background:#a86d18}.btn.green{background:#397b46}.btn.red{background:#8c3d3d}.btn:disabled{opacity:.45}
+.card{background:#1a2740;border-radius:14px;padding:14px;margin-bottom:10px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.small{font-size:13px;color:#b9c4d7}
+.troop{display:flex;align-items:center;gap:10px;padding:10px;background:#25334e;border-radius:10px;margin:7px 0}.troop .icon{font-size:28px}.grow{flex:1}
+.notice{padding:10px;background:#1d3550;border-radius:10px;margin-bottom:10px;font-size:13px}
+.attackfield{position:relative;background:#765d3c;border-radius:16px;aspect-ratio:10/14;overflow:hidden;border:5px solid #49391f}
+.target{position:absolute;background:#713d38;border:2px solid #f3c06b;border-radius:10px;padding:8px;font-size:24px;text-align:center}
+.deploy{position:absolute;bottom:8px;left:8px;right:8px;background:#182238e8;padding:9px;border-radius:12px}
+.message{min-height:22px;margin-top:8px;color:#ffe39a;font-weight:700;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>⚔️ Kampf der Krieger</h1>
+<div class="stats"><div class="stat">🪙 <span id="gold">5000</span></div><div class="stat">🧪 <span id="elixir">3000</span></div><div class="stat">🏆 <span id="trophies">0</span></div></div></header>
+<div class="tabs"><button class="tab active" data-tab="base">🏰 Basis</button><button class="tab" data-tab="army">⚔️ Armee</button><button class="tab" data-tab="attack">🔥 Angriff</button></div>
+<main>
+<section id="base" class="panel active">
+<div class="notice">Tippe ein Gebäude an. Im Ausbau kannst du es verbessern oder neue Gebäude bauen.</div>
+<div class="base" id="basefield"><div class="grid"></div></div>
+<div class="controls">
+<button class="btn gold" onclick="collect()">🪙 Alles einsammeln</button>
+<button class="btn green" onclick="build('mine')">⛏️ Goldmine bauen<br><small>500 🪙</small></button>
+<button class="btn green" onclick="build('pump')">🧪 Elixierpumpe<br><small>500 🪙</small></button>
+<button class="btn" onclick="build('tower')">🏹 Bogenturm<br><small>800 🪙</small></button>
+</div>
+<div id="selected" class="card" style="margin-top:10px;display:none"></div>
+</section>
+
+<section id="army" class="panel">
+<div class="card"><b>Kasernenplatz</b><div class="small">Ausgebildete Truppen werden für Angriffe gespeichert.</div><div style="margin-top:8px">⚔️ <span id="armyCount">0</span> Truppen</div></div>
+<div class="card">
+<div class="troop"><div class="icon">⚔️</div><div class="grow"><b>Krieger</b><div class="small">Günstig, schnell, Nahkampf</div></div><button class="btn gold" onclick="train('warrior')">+1<br>80 🧪</button></div>
+<div class="troop"><div class="icon">🏹</div><div class="grow"><b>Bogenschütze</b><div class="small">Fernkampf, etwas schwächer</div></div><button class="btn gold" onclick="train('archer')">+1<br>120 🧪</button></div>
+<div class="troop"><div class="icon">🛡️</div><div class="grow"><b>Brecher</b><div class="small">Langsam, viel Lebenspunkte</div></div><button class="btn gold" onclick="train('tank')">+1<br>180 🧪</button></div>
+</div>
+</section>
+
+<section id="attack" class="panel">
+<div class="notice">Setze deine Truppen im Feld ein. Das Ergebnis wird aus Truppenstärke und gegnerischer Verteidigung berechnet.</div>
+<div class="attackfield">
+<div class="target" style="left:35%;top:18%">🏰<br><small>Rathaus</small></div>
+<div class="target" style="left:10%;top:55%">🏹</div><div class="target" style="right:10%;top:52%">🏹</div>
+<div class="target" style="left:45%;top:62%">🪙</div>
+<div class="deploy"><div>Deine Armee: <b id="attackArmy">0</b></div><button class="btn red" style="width:100%;margin-top:6px" onclick="attack()">⚔️ ANGRIFF STARTEN</button></div>
+</div>
+<div class="message" id="message"></div>
+</section>
+</main>
+</div>
+<script>
+const defaults={gold:5000,elixir:3000,trophies:0,army:0,buildings:[
+{id:'town',type:'town',name:'Rathaus',icon:'🏰',x:40,y:40,level:1,kind:'b3'},
+{id:'mine1',type:'mine',name:'Goldmine',icon:'⛏️',x:0,y:0,level:1,kind:'b2'},
+{id:'pump1',type:'pump',name:'Elixierpumpe',icon:'🧪',x:70,y:0,level:1,kind:'b2'},
+{id:'tower1',type:'tower',name:'Bogenturm',icon:'🏹',x:0,y:50,level:1,kind:'b2'}
+]};
+let s=JSON.parse(localStorage.getItem('kdk3')||'null')||defaults;
+function save(){localStorage.setItem('kdk3',JSON.stringify(s))}
+function fmt(n){return Math.floor(n).toLocaleString('de-DE')}
+function renderStats(){gold.textContent=fmt(s.gold);elixir.textContent=fmt(s.elixir);trophies.textContent=s.trophies;armyCount.textContent=s.army;attackArmy.textContent=s.army}
+function renderBase(){
+ basefield.querySelectorAll('.building,.wall').forEach(e=>e.remove());
+ s.buildings.forEach(b=>{let e=document.createElement('div');e.className='building '+b.kind;e.style.left=b.x+'%';e.style.top=b.y+'%';e.textContent=b.icon;e.title=b.name;e.onclick=()=>selectBuilding(b);basefield.appendChild(e)})
+}
+function selectBuilding(b){selected.style.display='block';selected.innerHTML=`<div class="row"><b>${b.icon} ${b.name} – Stufe ${b.level}</b><button class="btn" onclick="selected.style.display='none'">✕</button></div><div class="small" style="margin:8px 0">Produktion/Verteidigung steigt mit jedem Level.</div><button class="btn gold" onclick="upgrade('${b.id}')">⬆️ Verbessern – ${500*b.level} 🪙</button>`}
+function upgrade(id){let b=s.buildings.find(x=>x.id===id),cost=500*b.level;if(s.gold<cost)return msg('Nicht genug Gold!');s.gold-=cost;b.level++;save();render();msg(b.name+' wurde verbessert!')}
+function build(type){let costs={mine:500,pump:500,tower:800};if(s.gold<costs[type])return msg('Nicht genug Gold!');s.gold-=costs[type];let names={mine:['Goldmine','⛏️'],pump:['Elixierpumpe','🧪'],tower:['Bogenturm','🏹']};let i=s.buildings.filter(b=>b.type===type).length;s.buildings.push({id:type+Date.now(),type,name:names[type][0],icon:names[type][1],x:5+(i*23)%70,y:20+Math.floor(i/3)*24,level:1,kind:'b2'});save();render();msg('Gebäude gebaut!')}
+function collect(){let g=s.buildings.filter(b=>b.type==='mine').reduce((a,b)=>a+250*b.level,0),e=s.buildings.filter(b=>b.type==='pump').reduce((a,b)=>a+180*b.level,0);s.gold+=g;s.elixir+=e;save();render();msg(`Gesammelt: +${g} 🪙 / +${e} 🧪`)}
+function train(t){let c={warrior:80,archer:120,tank:180}[t];if(s.elixir<c)return msg('Nicht genug Elixier!');s.elixir-=c;s.army++;save();renderStats();msg('Truppe ausgebildet!')}
+function attack(){if(!s.army)return msg('Du brauchst zuerst Truppen!');let power=s.army*(Math.random()*35+65),def=180+Math.random()*140,win=power>def;let loot=win?Math.floor(300+Math.random()*500):Math.floor(50+Math.random()*150);s.army=0;if(win){s.trophies+=10;s.gold+=loot;msg(`Sieg! +${loot} 🪙 und +10 🏆`)}else{msg(`Niederlage. Du hast ${loot} 🪙 geplündert, aber keine Trophäen gewonnen.`);s.gold+=loot}save();renderStats()}
+function msg(t){message.textContent=t;setTimeout(()=>{message.textContent=''},3500)}
+function render(){renderStats();renderBase()}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')})
+render();
+setInterval(()=>{s.gold+=s.buildings.filter(b=>b.type==='mine').reduce((a,b)=>a+Math.max(1,b.level),0);s.elixir+=s.buildings.filter(b=>b.type==='pump').reduce((a,b)=>a+Math.max(1,b.level),0);save();renderStats()},5000);
+</script>
+</body></html>
